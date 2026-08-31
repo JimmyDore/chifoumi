@@ -2,99 +2,112 @@
 <html lang="fr">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Chifoumi</title>
-  <link rel="stylesheet" href="/style.css">
+  <meta name="theme-color" content="#1c0b40">
+  <link rel="stylesheet" href="/style.css?v=3">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>✊</text></svg>">
 </head>
-<body>
-  <main>
-    <div class="logo">
-      <span class="fists">✊ ✋ ✌️</span>
-      <h1>Chifoumi</h1>
+<body class="room">
+  <div class="topbar">
+    <a class="home-pill" href="/" aria-label="Retour à l’accueil">🏠</a>
+    <div class="stake-ticket hidden" id="stake-banner">
+      <span class="stake-eyebrow">😈 Celui qui perd</span>
+      <span class="stake-text" id="stake-text"></span>
     </div>
+  </div>
 
+  <main>
     <!-- Duel introuvable / expiré -->
-    <div id="screen-notfound" class="card hidden">
-      <p class="result-text">😕 Duel introuvable ou expiré.</p>
-      <a href="/" class="btn" style="text-align:center;text-decoration:none;display:block">Créer un nouveau duel</a>
-    </div>
+    <section id="screen-notfound" class="screen center hidden">
+      <div class="card">
+        <div class="big-emoji">😕</div>
+        <h2>Duel introuvable</h2>
+        <p class="sub">Il a expiré, ou le lien est cassé.</p>
+        <a href="/" class="btn">Créer un nouveau duel</a>
+      </div>
+    </section>
 
     <!-- Duel complet (troisième visiteur) -->
-    <div id="screen-full" class="card hidden">
-      <p class="result-text">🚪 Duel complet !</p>
-      <p class="status">Deux joueurs s’affrontent déjà ici.</p>
-      <a href="/" class="btn" style="text-align:center;text-decoration:none;display:block">Créer mon propre duel</a>
-    </div>
+    <section id="screen-full" class="screen center hidden">
+      <div class="card">
+        <div class="big-emoji">🚪</div>
+        <h2>Duel complet !</h2>
+        <p class="sub">Deux joueurs s’affrontent déjà ici.</p>
+        <a href="/" class="btn">Créer mon propre duel</a>
+      </div>
+    </section>
 
     <!-- Deuxième joueur : saisie du pseudo -->
-    <form id="screen-join" class="card hidden">
-      <p class="result-text">⚔️ On te défie en duel !</p>
-      <p class="status" id="join-details"></p>
-      <div>
-        <label for="join-pseudo">Ton pseudo</label>
-        <input type="text" id="join-pseudo" maxlength="24" required
-               autocomplete="nickname" placeholder="Jimmy">
+    <form id="screen-join" class="screen center hidden">
+      <div class="card">
+        <div class="big-emoji">⚔️</div>
+        <h2 id="join-title">On te défie en duel !</h2>
+        <p class="sub" id="join-details"></p>
+        <div class="field">
+          <label for="join-pseudo">Ton pseudo</label>
+          <input type="text" id="join-pseudo" maxlength="24" required
+                 autocomplete="nickname" placeholder="Jimmy">
+        </div>
+        <button type="submit" class="btn">Relever le défi 🥊</button>
       </div>
-      <button type="submit" class="btn">Relever le défi 🥊</button>
     </form>
 
-    <!-- Partage du lien (créateur en attente) -->
-    <div id="screen-share" class="card hidden">
-      <p class="result-text">🔗 Envoie ce lien à ton adversaire</p>
-      <div class="share-box">
-        <input type="text" id="share-url" readonly>
-        <button class="btn" id="copy-btn" type="button">Copier</button>
-        <button class="btn secondary hidden" id="share-btn" type="button">Partager</button>
-      </div>
-      <p class="copied" id="copy-feedback"></p>
-    </div>
-
     <!-- Duel -->
-    <div id="screen-game" class="card hidden">
-      <p class="stake-banner hidden" id="stake-banner"></p>
+    <section id="screen-game" class="screen game hidden">
+      <div class="stage">
+        <p class="opp-line" id="opp-line"></p>
+        <p class="score-chip hidden" id="score-chip"></p>
 
-      <div class="scoreboard">
-        <div class="side">
-          <div class="pname" id="you-name">…</div>
-          <div class="pstate" id="you-state"></div>
+        <!-- Créateur en attente : partage du lien -->
+        <div class="card share-card hidden" id="share-card">
+          <p class="share-wait"><span class="waiting-dots">En attente de l’adversaire</span></p>
+          <p class="share-hint">Envoie ce lien, le duel démarre dès qu’il s’ouvre.</p>
+          <div class="share-box">
+            <input type="text" id="share-url" readonly>
+            <button class="btn" id="copy-btn" type="button">Copier</button>
+          </div>
+          <button class="btn ghost hidden" id="share-btn" type="button">Partager 📤</button>
+          <p class="copied" id="copy-feedback"></p>
         </div>
-        <div class="points" id="score">0 — 0</div>
-        <div class="side">
-          <div class="pname" id="opp-name">…</div>
-          <div class="pstate" id="opp-state"></div>
+
+        <div class="countdown hidden" id="countdown"></div>
+
+        <div class="arena hidden" id="arena">
+          <div class="duelist">
+            <span class="fighter left" id="arena-you">✊</span>
+            <small>Toi</small>
+          </div>
+          <span class="vs">VS</span>
+          <div class="duelist">
+            <span class="fighter" id="arena-opp">✊</span>
+            <small id="arena-opp-name">…</small>
+          </div>
+        </div>
+
+        <p class="result-text" id="result-text"></p>
+
+        <div class="final hidden" id="final">
+          <div class="trophy" id="final-emoji">🏆</div>
+          <h2 id="final-title"></h2>
+          <p class="loser-stake hidden" id="final-stake"></p>
         </div>
       </div>
 
-      <p class="round-info" id="round-info"></p>
-
-      <div class="countdown hidden" id="countdown"></div>
-
-      <div class="arena hidden" id="arena">
-        <span class="fighter left" id="arena-you">✊</span>
-        <span class="vs">VS</span>
-        <span class="fighter" id="arena-opp">✊</span>
+      <div class="bottom">
+        <p class="prompt" id="prompt"></p>
+        <div class="hands" id="hands">
+          <button class="hand" data-choice="pierre"><span class="he">✊</span><small>Pierre</small></button>
+          <button class="hand" data-choice="feuille"><span class="he">✋</span><small>Feuille</small></button>
+          <button class="hand" data-choice="ciseaux"><span class="he">✌️</span><small>Ciseaux</small></button>
+        </div>
+        <button class="btn hidden" id="rematch-btn" type="button">Revanche 🔁</button>
+        <a href="/" class="home-link hidden" id="home-link">🏠 Nouveau duel</a>
       </div>
-
-      <p class="result-text" id="result-text"></p>
-
-      <div class="hands" id="hands">
-        <button class="hand" data-choice="pierre">✊<small>Pierre</small></button>
-        <button class="hand" data-choice="feuille">✋<small>Feuille</small></button>
-        <button class="hand" data-choice="ciseaux">✌️<small>Ciseaux</small></button>
-      </div>
-
-      <div class="final hidden" id="final">
-        <div class="trophy">🏆</div>
-        <h2 id="final-title"></h2>
-        <p class="loser-stake hidden" id="final-stake"></p>
-        <button class="btn" id="rematch-btn" type="button">Revanche 🔁</button>
-      </div>
-    </div>
-
-    <p class="status" id="conn-status"></p>
+    </section>
   </main>
-  <footer><a href="/">← Créer un autre duel</a></footer>
-  <script src="/room.js"></script>
+
+  <p class="toast" id="conn-status"></p>
+  <script src="/room.js?v=3"></script>
 </body>
 </html>

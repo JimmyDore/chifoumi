@@ -12,7 +12,6 @@ const screens = {
   notfound: $('screen-notfound'),
   full: $('screen-full'),
   join: $('screen-join'),
-  share: $('screen-share'),
   game: $('screen-game'),
 };
 
@@ -50,12 +49,19 @@ function randomToken() {
 
 function show(name) {
   for (const [key, el] of Object.entries(screens)) {
-    el.classList.toggle('hidden', key !== name && !(name === 'game' && key === 'share' && shareVisible()));
+    el.classList.toggle('hidden', key !== name);
   }
 }
 
-function shareVisible() {
-  return state && state.seats < 2 && mySeat !== -1;
+// Pancarte d'enjeu : visible dans tous les états dès que l'enjeu est connu.
+function setStake(stake) {
+  const banner = $('stake-banner');
+  if (stake) {
+    $('stake-text').textContent = stake;
+    banner.classList.remove('hidden');
+  } else {
+    banner.classList.add('hidden');
+  }
 }
 
 // ---------- Connexion ----------
@@ -135,64 +141,73 @@ function scheduleRender() {
 function render() {
   if (!state || mySeat === -1) return;
   show('game');
-  screens.share.classList.toggle('hidden', !shareVisible());
+  setStake(state.stake);
 
   const me = state.players[mySeat];
   const opp = state.players[1 - mySeat];
+  const waiting = state.seats < 2;
+  const over = state.phase === 'over';
 
-  // Enjeu
-  const stakeBanner = $('stake-banner');
-  if (state.stake) {
-    stakeBanner.textContent = `Celui qui perd : ${state.stake}`;
-    stakeBanner.classList.remove('hidden');
-  } else {
-    stakeBanner.classList.add('hidden');
-  }
-
-  // Tableau de score
-  $('you-name').textContent = me ? me.name : '…';
-  $('opp-name').textContent = opp ? opp.name : '…';
-  $('score').textContent = `${me ? me.score : 0} — ${opp ? opp.score : 0}`;
-
-  const formatLabel =
-    state.bestOf === 1 ? 'Un seul coup' : `Meilleur des ${state.bestOf} · premier à ${state.target}`;
-  $('round-info').textContent =
-    state.phase === 'playing' && state.bestOf > 1
-      ? `Manche ${state.round} · ${formatLabel}`
-      : formatLabel;
-
-  // États joueurs
-  if (!opp) {
-    $('opp-name').textContent = 'Adversaire';
-    $('opp-state').innerHTML = '<span class="waiting-dots">en attente</span>';
-    $('you-state').textContent = '';
+  // Ligne adversaire, compacte : « Marie ✅ a choisi »
+  const oppLine = $('opp-line');
+  if (!opp || over) {
+    oppLine.textContent = '';
   } else if (!opp.connected) {
-    $('opp-state').textContent = '🔌 déconnecté·e';
+    oppLine.textContent = `${opp.name} 🔌 déconnecté·e…`;
   } else if (state.phase === 'playing') {
-    $('opp-state').textContent = opp.hasChosen ? '✅ a choisi' : '🤔 réfléchit…';
+    oppLine.textContent = opp.hasChosen
+      ? `${opp.name} ✅ a choisi`
+      : `${opp.name} 🤔 réfléchit…`;
   } else {
-    $('opp-state').textContent = '';
+    oppLine.textContent = `${opp.name} est là !`;
   }
 
+  // Score / manche : seulement quand ça apporte quelque chose.
+  const chip = $('score-chip');
+  const total = (me ? me.score : 0) + (opp ? opp.score : 0);
+  let chipVisible = !!opp && (state.bestOf > 1 || total > 0);
+  if (over && state.bestOf === 1) chipVisible = false;
+  if (chipVisible) {
+    let text = `Toi ${me.score} — ${opp.score} ${opp.name}`;
+    if (state.phase === 'playing' && state.bestOf > 1) {
+      text += ` · Manche ${state.round}/${state.bestOf}`;
+    }
+    chip.textContent = text;
+  }
+  chip.classList.toggle('hidden', !chipVisible);
+
+  // Partage du lien tant que l'adversaire n'est pas là.
+  $('share-card').classList.toggle('hidden', !waiting);
+
+  // Invite au-dessus des mains.
   const myChoice = state.you ? state.you.choice : null;
-  if (state.phase === 'playing') {
-    $('you-state').textContent = myChoice ? `${EMOJI[myChoice]} choix posé` : 'à toi de jouer !';
+  const prompt = $('prompt');
+  if (state.phase === 'playing' && opp) {
+    if (myChoice) {
+      prompt.textContent = `${EMOJI[myChoice]} Choix posé !`;
+      prompt.classList.remove('go');
+    } else {
+      prompt.textContent = 'À toi de jouer 👇';
+      prompt.classList.add('go');
+    }
   } else {
-    $('you-state').textContent = '';
+    prompt.textContent = '';
   }
 
-  // Boutons
+  // Boutons.
   const playable = state.phase === 'playing' && !animating;
   for (const btn of document.querySelectorAll('.hand')) {
     btn.disabled = !playable;
     btn.classList.toggle('selected', myChoice === btn.dataset.choice);
   }
-  $('hands').classList.toggle('hidden', state.phase === 'over');
+  $('hands').classList.toggle('hidden', waiting || over);
+  $('rematch-btn').classList.toggle('hidden', !over);
+  $('home-link').classList.toggle('hidden', !over);
 
-  // Fin de duel
-  if (state.phase === 'over' && !animating) {
+  // Fin de duel.
+  if (over && !animating) {
     showFinal();
-  } else if (state.phase !== 'over') {
+  } else if (!over) {
     $('final').classList.add('hidden');
   }
 }
@@ -201,16 +216,16 @@ function showFinal() {
   const winner = state.players[state.winner];
   const loser = state.players[1 - state.winner];
   const iWon = state.winner === mySeat;
-  $('final-title').textContent = iWon ? `Tu gagnes, ${winner.name} !` : `${winner.name} gagne !`;
+  $('final-emoji').textContent = iWon ? '🏆' : '😵';
+  $('final-title').textContent = iWon ? 'Tu gagnes !' : `${winner.name} gagne !`;
   const stakeEl = $('final-stake');
   if (state.stake && loser) {
-    stakeEl.textContent = `😬 ${loser.name} — celui qui perd : ${state.stake}`;
+    stakeEl.textContent = `😬 ${iWon ? loser.name : 'Toi'}, celui qui perd : ${state.stake}`;
     stakeEl.classList.remove('hidden');
   } else {
     stakeEl.classList.add('hidden');
   }
   $('final').classList.remove('hidden');
-  $('hands').classList.add('hidden');
 }
 
 function resetRoundUI() {
@@ -218,7 +233,6 @@ function resetRoundUI() {
   $('countdown').classList.add('hidden');
   $('result-text').textContent = '';
   $('final').classList.add('hidden');
-  $('hands').classList.remove('hidden');
 }
 
 // ---------- Révélation : 3, 2, 1… puis les deux coups en même temps ----------
@@ -226,6 +240,8 @@ function resetRoundUI() {
 function playReveal(reveal) {
   animating = true;
   for (const btn of document.querySelectorAll('.hand')) btn.disabled = true;
+  $('prompt').textContent = '';
+  $('opp-line').textContent = '';
   $('result-text').textContent = '';
   $('arena').classList.add('hidden');
 
@@ -252,6 +268,8 @@ function revealHands(reveal) {
   const oppChoice = reveal.choices[1 - mySeat];
   $('arena-you').textContent = EMOJI[myChoice];
   $('arena-opp').textContent = EMOJI[oppChoice];
+  const oppName = state.players[1 - mySeat]?.name;
+  $('arena-opp-name').textContent = oppName || 'Adversaire';
   const arena = $('arena');
   arena.classList.remove('hidden');
 
@@ -293,7 +311,9 @@ $('hands').addEventListener('click', (e) => {
   for (const b of document.querySelectorAll('.hand')) {
     b.classList.toggle('selected', b === btn);
   }
-  $('you-state').textContent = `${EMOJI[btn.dataset.choice]} choix posé`;
+  const prompt = $('prompt');
+  prompt.textContent = `${EMOJI[btn.dataset.choice]} Choix posé !`;
+  prompt.classList.remove('go');
 });
 
 $('rematch-btn').addEventListener('click', () => {
@@ -344,14 +364,12 @@ if (savedToken) {
         show('full');
         return;
       }
+      setStake(info.stake);
       show('join');
       $('join-pseudo').value = savedPseudo;
-      const formatLabel = info.bestOf === 1 ? 'un seul coup' : `meilleur des ${info.bestOf}`;
-      const parts = [];
-      if (info.names[0]) parts.push(`${info.names[0]} te défie`);
-      parts.push(formatLabel);
-      if (info.stake) parts.push(`celui qui perd : ${info.stake}`);
-      $('join-details').textContent = parts.join(' · ');
+      if (info.names[0]) $('join-title').textContent = `${info.names[0]} te défie !`;
+      $('join-details').textContent =
+        info.bestOf === 1 ? 'Un seul coup, pas de rattrapage.' : `Meilleur des ${info.bestOf}.`;
     })
     .catch(() => {
       dead = true;

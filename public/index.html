@@ -2,34 +2,35 @@
 <html lang="fr">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Chifoumi</title>
   <meta name="description" content="Pierre, feuille, ciseaux à distance — pour trancher les petites décisions du quotidien.">
-  <link rel="stylesheet" href="/style.css">
+  <meta name="theme-color" content="#1c0b40">
+  <link rel="stylesheet" href="/style.css?v=3">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>✊</text></svg>">
 </head>
-<body>
+<body class="home">
   <main>
-    <div class="logo">
-      <span class="fists">✊ ✋ ✌️</span>
+    <header class="hero">
+      <div class="fists"><span>✊</span><span>✋</span><span>✌️</span></div>
       <h1>Chifoumi</h1>
-      <p>Pierre, feuille, ciseaux à distance.<br>Pour trancher les petites décisions du quotidien.</p>
-    </div>
+      <p class="tagline">Pierre, feuille, ciseaux à distance — pour trancher les petits litiges.</p>
+    </header>
 
     <form id="create-form" class="card">
-      <div>
+      <div class="field">
         <label for="pseudo">Ton pseudo</label>
         <input type="text" id="pseudo" name="pseudo" maxlength="24" required
                autocomplete="nickname" placeholder="Marie">
       </div>
 
-      <div>
-        <label for="stake">Celui qui perd… <span style="font-weight:400;color:var(--muted)">(optionnel)</span></label>
+      <div class="field">
+        <label for="stake">Celui qui perd… <span class="opt">(optionnel)</span></label>
         <input type="text" id="stake" name="stake" maxlength="140"
                placeholder="fait la vaisselle">
       </div>
 
-      <div>
+      <div class="field">
         <label>Format</label>
         <div class="formats">
           <label>
@@ -48,10 +49,9 @@
       </div>
 
       <button type="submit" class="btn" id="create-btn">Créer le duel ⚔️</button>
-      <p class="status" id="create-error"></p>
+      <p class="form-error" id="create-error"></p>
     </form>
   </main>
-  <footer>Aucun compte, rien n’est conservé : les duels s’effacent après une heure d’inactivité.</footer>
-  <script src="/home.js"></script>
+  <script src="/home.js?v=3"></script>
 </body>
 </html>
