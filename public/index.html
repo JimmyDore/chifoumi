@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Chifoumi</title>
+  <meta name="description" content="Pierre, feuille, ciseaux à distance — pour trancher les petites décisions du quotidien.">
+  <link rel="stylesheet" href="/style.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>✊</text></svg>">
+</head>
+<body>
+  <main>
+    <div class="logo">
+      <span class="fists">✊ ✋ ✌️</span>
+      <h1>Chifoumi</h1>
+      <p>Pierre, feuille, ciseaux à distance.<br>Pour trancher les petites décisions du quotidien.</p>
+    </div>
+
+    <form id="create-form" class="card">
+      <div>
+        <label for="pseudo">Ton pseudo</label>
+        <input type="text" id="pseudo" name="pseudo" maxlength="24" required
+               autocomplete="nickname" placeholder="Marie">
+      </div>
+
+      <div>
+        <label for="stake">Celui qui perd… <span style="font-weight:400;color:var(--muted)">(optionnel)</span></label>
+        <input type="text" id="stake" name="stake" maxlength="140"
+               placeholder="fait la vaisselle">
+      </div>
+
+      <div>
+        <label>Format</label>
+        <div class="formats">
+          <label>
+            <input type="radio" name="bestOf" value="1" checked>
+            <span>Un seul coup</span>
+          </label>
+          <label>
+            <input type="radio" name="bestOf" value="3">
+            <span>Meilleur des 3</span>
+          </label>
+          <label>
+            <input type="radio" name="bestOf" value="5">
+            <span>Meilleur des 5</span>
+          </label>
+        </div>
+      </div>
+
+      <button type="submit" class="btn" id="create-btn">Créer le duel ⚔️</button>
+      <p class="status" id="create-error"></p>
+    </form>
+  </main>
+  <footer>Aucun compte, rien n’est conservé : les duels s’effacent après une heure d’inactivité.</footer>
+  <script src="/home.js"></script>
+</body>
+</html>

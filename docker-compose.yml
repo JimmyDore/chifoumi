@@ -1,0 +1,23 @@
+# Stack chifoumi.jimmydore.fr — un seul service node (statique + WebSocket).
+# Pas de ports publiés : le trafic arrive via le Caddy partagé (stack
+# ravetycoon) qui fait le TLS et reverse-proxy vers chifoumi-web:8787 sur le
+# réseau Docker `ravetycoon_default`.
+#
+# ATTENTION : le service est préfixé `chifoumi-` à dessein. Le réseau est
+# partagé avec la stack ravetycoon, qui expose déjà les alias DNS `web` et
+# `api` ; un service nommé `web` ou `api` ici capterait le trafic de l'autre
+# stack (piège déjà rencontré, cf. compose de music-bingo).
+services:
+  chifoumi-web:
+    build:
+      context: .
+      dockerfile: deploy/Dockerfile
+    image: chifoumi-web
+    container_name: chifoumi-web
+    restart: unless-stopped
+    networks:
+      - ravetycoon_default
+
+networks:
+  ravetycoon_default:
+    external: true
